@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dinge 🐶 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🐶</span><span>Dinge</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, clouds } = Kid;
+$("#totalStars").textContent = Store.total();
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Dinge & Tiere mit deutschem Namen (Artikel dabei, damit es richtig klingt) */
+const THINGS=[
+  {word:"der Hund",   glyph:"🐶"},
+  {word:"die Katze",  glyph:"🐱"},
+  {word:"der Apfel",  glyph:"🍎"},
+  {word:"das Auto",   glyph:"🚗"},
+  {word:"der Ball",   glyph:"⚽"},
+  {word:"die Banane", glyph:"🍌"},
+  {word:"die Blume",  glyph:"🌸"},
+  {word:"die Sonne",  glyph:"☀️"},
+  {word:"der Baum",   glyph:"🌳"},
+  {word:"der Fisch",  glyph:"🐟"},
+  {word:"die Ente",   glyph:"🦆"},
+  {word:"das Haus",   glyph:"🏠"}
+];
+
+function buildRounds(){
+  const chosen=shuffle(THINGS).slice(0,8);
+  return chosen.map(target=>{
+    const distract=shuffle(THINGS.filter(t=>t.glyph!==target.glyph)).slice(0,2);
+    const options=[target,...distract].map(t=>({
+      ok:t.glyph===target.glyph,
+      build:node=>node.append(el("div",{class:"glyph"},t.glyph))
+    }));
+    return {
+      say:"Wo ist "+target.word+"? Tippe darauf!",
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},"👂")),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"dinge", face:"🐶", title:"Dinge", backHref:"../../index.html",
+  intro:"Ich sage ein Ding oder ein Tier – tippe auf das richtige Bild!",
+  introHtml:"Wir üben <b>Dinge & Tiere</b>! Ich sage etwas – tippe auf das passende Bild. 🐶",
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

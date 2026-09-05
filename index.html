@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zizo Lern-Spaß 🌟</title>
+<link rel="stylesheet" href="shared/styles.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🌟</span><span>Zizo Lern-Spaß</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, Sound, Speak, Store, setScreen, mascotRow, wireSoundButton, clouds } = Kid;
+
+/* Die vier Lern-Bereiche fuer Zizo (4 Jahre) */
+const ACTIVITIES=[
+  { id:"farben", face:"🎨", name:"Farben",  say:"Farben", href:"topics/farben/index.html" },
+  { id:"zahlen", face:"🔢", name:"Zahlen",  say:"Zahlen zählen", href:"topics/zahlen/index.html" },
+  { id:"formen", face:"⭐", name:"Formen",  say:"Formen", href:"topics/formen/index.html" },
+  { id:"dinge",  face:"🐶", name:"Dinge",   say:"Dinge und Tiere", href:"topics/dinge/index.html" }
+];
+
+function updTotal(){ const e=$("#totalStars"); if(e) e.textContent=Store.total(); }
+
+function renderHub(){
+  updTotal();
+  const wrap=el("div",{class:"screen"});
+  wrap.append(el("h1",{class:"hub-title"},"🌟 Zizo Lern-Spaß"));
+  wrap.append(el("div",{class:"hub-sub"},"Tippe auf ein Bild und leg los!"));
+  wrap.append(mascotRow("🐣","Hallo <b>Zizo</b>! Was möchtest du heute lernen? Tippe auf ein Bild! 🎉"));
+
+  const grid=el("div",{class:"tiles"});
+  ACTIVITIES.forEach(a=>{
+    const stars=Store.stars(a.id);
+    const tile=el("div",{class:"tile"+(stars>0?" done":"")});
+    tile.append(el("span",{class:"emoji"},a.face));
+    tile.append(el("div",{class:"nm"},a.name));
+    const sd=el("div",{class:"stars"});
+    for(let k=0;k<3;k++) sd.append(el("span",{class:"s"+(k<stars?" on":"")},"★"));
+    tile.append(sd);
+    tile.addEventListener("click",()=>{
+      Sound.click();
+      Speak.say(a.say,{cb:()=>{ location.href=a.href; }});
+      // Fallback, falls keine Sprachausgabe verfügbar ist
+      setTimeout(()=>{ location.href=a.href; }, 900);
+    });
+    grid.append(tile);
+  });
+  wrap.append(grid);
+
+  const foot=el("div",{class:"center",style:"margin-top:22px"});
+  foot.append(el("button",{class:"btn gray",onclick:()=>{
+    if(confirm("Alle Sterne von Zizo zurücksetzen?")){ Store.resetAll(); renderHub(); }
+  }},"↺ Neu anfangen"));
+  wrap.append(foot);
+
+  setScreen(wrap);
+}
+
+wireSoundButton($("#soundBtn"));
+clouds();
+renderHub();
+Speak.say("Hallo Zizo! Tippe auf ein Bild.");
+
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+</script>
+</body>
+</html>

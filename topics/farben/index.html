@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Farben 🎨 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🎨</span><span>Farben</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, clouds } = Kid;
+$("#totalStars").textContent = Store.total();
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Farben mit deutschem Namen + Farbwert */
+const COLORS=[
+  { name:"Rot",    hex:"#ff4d4d" },
+  { name:"Blau",   hex:"#3aa0ff" },
+  { name:"Gelb",   hex:"#ffd23f" },
+  { name:"Grün",   hex:"#3ad07f" },
+  { name:"Orange", hex:"#ff9f43" },
+  { name:"Lila",   hex:"#a06bff" },
+  { name:"Rosa",   hex:"#ff6fc4" },
+  { name:"Braun",  hex:"#b06a3a" }
+];
+
+const swatch=(hex,big)=>el("div",{class:big?"bigswatch":"swatch",style:"background:"+hex});
+
+/* Baue 8 Runden: "Tippe auf <Farbe>" – Wort in der Farbe zeigen + 3 Kacheln */
+function buildRounds(){
+  const chosen=shuffle(COLORS).slice(0,8);
+  return chosen.map(target=>{
+    const distract=shuffle(COLORS.filter(c=>c.name!==target.name)).slice(0,2);
+    const options=[target,...distract].map(c=>({
+      ok:c.name===target.name,
+      build:node=>node.append(swatch(c.hex))
+    }));
+    return {
+      say:"Tippe auf "+target.name,
+      cols:3,
+      prompt:host=>{
+        host.append(el("div",{class:"word",style:"color:"+target.hex},target.name));
+      },
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"farben", face:"🎨", title:"Farben", backHref:"../../index.html",
+  intro:"Welche Farbe ist das? Hör gut zu und tippe auf die richtige Farbe!",
+  introHtml:"Wir üben <b>Farben</b>! Ich sage eine Farbe – tippe auf den passenden Kreis. 🎨",
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zahlen 🔢 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🔢</span><span>Zahlen</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, rnd, pick, shuffle, Store, pickGame, wireSoundButton, clouds } = Kid;
+$("#totalStars").textContent = Store.total();
+wireSoundButton($("#soundBtn"));
+clouds();
+
+const OBJECTS=["🍎","⭐","🐟","🎈","🐝","🌸","🚗","🐸","🍓","🦋"];
+const WORD={1:"eins",2:"zwei",3:"drei",4:"vier",5:"fünf",6:"sechs",7:"sieben",8:"acht",9:"neun",10:"zehn"};
+
+/* drei Zahl-Kacheln: die richtige + zwei Nachbarn */
+function numberOptions(correct,maxN){
+  const set=new Set([correct]);
+  while(set.size<3){ let d=correct+pick([-2,-1,1,2]); if(d>=1&&d<=maxN) set.add(d); }
+  return shuffle([...set]).map(n=>({
+    ok:n===correct,
+    build:node=>node.append(el("div",{class:"numeral"},String(n)))
+  }));
+}
+
+function buildRounds(){
+  const rounds=[];
+  // 5 Zaehl-Runden (Objekte zaehlen)
+  for(let k=0;k<5;k++){
+    const n=rnd(1,7), emoji=pick(OBJECTS);
+    rounds.push({
+      say:"Zähle! Wie viele sind es?",
+      cols:3,
+      prompt:host=>{
+        const row=el("div",{class:"countrow"});
+        for(let j=0;j<n;j++) row.append(el("span",{class:"glyph"},emoji));
+        host.append(row);
+      },
+      options:numberOptions(n,10)
+    });
+  }
+  // 3 Zahl-erkennen-Runden ("Tippe auf die Zahl ...")
+  const targets=shuffle([2,3,4,5,6,7,8,9,10]).slice(0,3);
+  targets.forEach(n=>{
+    rounds.push({
+      say:"Tippe auf die Zahl "+WORD[n],
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},"🔢")),
+      options:numberOptions(n,10)
+    });
+  });
+  return shuffle(rounds);
+}
+
+pickGame({
+  id:"zahlen", face:"🔢", title:"Zahlen", backHref:"../../index.html",
+  intro:"Wir zählen zusammen! Zähle die Bilder und tippe auf die richtige Zahl.",
+  introHtml:"Wir üben <b>Zahlen</b>! Zähle die Bilder und tippe auf die passende Zahl. 🔢",
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>
