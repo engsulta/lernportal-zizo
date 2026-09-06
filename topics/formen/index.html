@@ -16,8 +16,9 @@
 <canvas id="confetti" style="display:none"></canvas>
 <div id="app">
   <div class="topbar">
-    <div class="brand"><span class="logo">⭐</span><span>Formen</span></div>
+    <div class="brand"><span class="logo">⭐</span><span id="brandName">Formen</span></div>
     <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
     <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
   </div>
   <div id="screen"></div>
@@ -27,8 +28,11 @@
 <script src="../../shared/kid.js"></script>
 <script>
 "use strict";
-const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, clouds } = Kid;
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
 $("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Formen","Shapes");
+wireLangButton($("#langBtn"));
 wireSoundButton($("#soundBtn"));
 clouds();
 
@@ -43,7 +47,8 @@ const SHAPES={
   stern:   c=>`<polygon points="50,5 61.8,38.2 96.9,38.2 68.5,59.5 79.4,92.7 50,71.5 20.6,92.7 31.5,59.5 3.1,38.2 38.2,38.2" fill="${c}"/>`,
   herz:    c=>`<path d="M50,88 C10,60 10,20 35,20 C48,20 50,35 50,38 C50,35 52,20 65,20 C90,20 90,60 50,88 Z" fill="${c}"/>`
 };
-const NAME={ kreis:"Kreis", quadrat:"Quadrat", dreieck:"Dreieck", stern:"Stern", herz:"Herz" };
+const NAME_DE={ kreis:"Kreis", quadrat:"Quadrat", dreieck:"Dreieck", stern:"Stern", herz:"Herz" };
+const NAME_EN={ kreis:"circle", quadrat:"square", dreieck:"triangle", stern:"star", herz:"heart" };
 const KINDS=Object.keys(SHAPES);
 
 function shapeNode(kind,color,big){
@@ -65,7 +70,8 @@ function buildRounds(){
       { ok:false, kind:others[1],color:pick(COLORS) }
     ].map(o=>({ ok:o.ok, build:node=>node.append(shapeNode(o.kind,o.color)) }));
     rounds.push({
-      say:"Das ist ein "+NAME[target]+". Finde die gleiche Form!",
+      say:T("Das ist ein "+NAME_DE[target]+". Finde die gleiche Form!",
+            "This is a "+NAME_EN[target]+". Find the same shape!"),
       cols:3,
       prompt:host=>host.append(shapeNode(target,promptColor,true)),
       options:opts
@@ -75,9 +81,11 @@ function buildRounds(){
 }
 
 pickGame({
-  id:"formen", face:"⭐", title:"Formen", backHref:"../../index.html",
-  intro:"Wir suchen gleiche Formen! Schau oben, welche Form das ist, und finde die gleiche unten.",
-  introHtml:"Wir üben <b>Formen</b>! Oben siehst du eine Form – finde unten die <b>gleiche</b> Form. ⭐",
+  id:"formen", face:"⭐", title:T("Formen","Shapes"), backHref:"../../index.html",
+  intro:T("Wir suchen gleiche Formen! Schau oben, welche Form das ist, und finde die gleiche unten.",
+          "Let's find matching shapes! Look at the shape on top, then find the same one below."),
+  introHtml:T("Wir üben <b>Formen</b>! Oben siehst du eine Form – finde unten die <b>gleiche</b> Form. ⭐",
+              "Let's practice <b>shapes</b>! You see a shape on top – find the <b>same</b> shape below. ⭐"),
   rounds: buildRounds()
 });
 </script>

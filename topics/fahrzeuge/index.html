@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dinge 🐶 – Zizo Lern-Spaß</title>
+<title>Fahrzeuge 🚗 – Zizo Lern-Spaß</title>
 <link rel="stylesheet" href="../../shared/styles.css">
 <link rel="manifest" href="../../manifest.webmanifest">
 <meta name="theme-color" content="#89d4ff">
@@ -16,7 +16,7 @@
 <canvas id="confetti" style="display:none"></canvas>
 <div id="app">
   <div class="topbar">
-    <div class="brand"><span class="logo">🐶</span><span id="brandName">Dinge</span></div>
+    <div class="brand"><span class="logo">🚗</span><span id="brandName">Fahrzeuge</span></div>
     <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
     <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
     <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
@@ -31,34 +31,32 @@
 const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
 document.documentElement.lang = Lang.get();
 $("#totalStars").textContent = Store.total();
-$("#brandName").textContent = T("Dinge","Things");
+$("#brandName").textContent = T("Fahrzeuge","Vehicles");
 wireLangButton($("#langBtn"));
 wireSoundButton($("#soundBtn"));
 clouds();
 
-/* Dinge & Tiere zweisprachig (Deutsch mit Artikel / Englisch) */
-const THINGS=[
-  {de:"der Hund",   en:"the dog",    glyph:"🐶"},
-  {de:"die Katze",  en:"the cat",    glyph:"🐱"},
-  {de:"der Apfel",  en:"the apple",  glyph:"🍎"},
-  {de:"das Auto",   en:"the car",    glyph:"🚗"},
-  {de:"der Ball",   en:"the ball",   glyph:"⚽"},
-  {de:"die Banane", en:"the banana", glyph:"🍌"},
-  {de:"die Blume",  en:"the flower", glyph:"🌸"},
-  {de:"die Sonne",  en:"the sun",    glyph:"☀️"},
-  {de:"der Baum",   en:"the tree",   glyph:"🌳"},
-  {de:"der Fisch",  en:"the fish",   glyph:"🐟"},
-  {de:"die Ente",   en:"the duck",   glyph:"🦆"},
-  {de:"das Haus",   en:"the house",  glyph:"🏠"}
+/* Fahrzeuge zweisprachig (Deutsch mit Artikel / Englisch) */
+const VEHICLES=[
+  {de:"das Auto",           en:"the car",        glyph:"🚗"},
+  {de:"der Bus",            en:"the bus",        glyph:"🚌"},
+  {de:"das Flugzeug",       en:"the airplane",   glyph:"✈️"},
+  {de:"das Schiff",         en:"the boat",       glyph:"🚢"},
+  {de:"der Zug",            en:"the train",      glyph:"🚂"},
+  {de:"das Feuerwehrauto",  en:"the fire truck", glyph:"🚒"},
+  {de:"der Traktor",        en:"the tractor",    glyph:"🚜"},
+  {de:"das Fahrrad",        en:"the bicycle",    glyph:"🚲"},
+  {de:"der Hubschrauber",   en:"the helicopter", glyph:"🚁"},
+  {de:"die Rakete",         en:"the rocket",     glyph:"🚀"}
 ];
 
 function buildRounds(){
-  const chosen=shuffle(THINGS).slice(0,8);
+  const chosen=shuffle(VEHICLES).slice(0,8);
   return chosen.map(target=>{
-    const distract=shuffle(THINGS.filter(t=>t.glyph!==target.glyph)).slice(0,2);
-    const options=[target,...distract].map(t=>({
-      ok:t.glyph===target.glyph,
-      build:node=>node.append(el("div",{class:"glyph"},t.glyph))
+    const distract=shuffle(VEHICLES.filter(v=>v.glyph!==target.glyph)).slice(0,2);
+    const options=[target,...distract].map(v=>({
+      ok:v.glyph===target.glyph,
+      build:node=>node.append(el("div",{class:"glyph"},v.glyph))
     }));
     return {
       say:T("Wo ist "+target.de+"? Tippe darauf!", "Where is "+target.en+"? Tap it!"),
@@ -70,11 +68,11 @@ function buildRounds(){
 }
 
 pickGame({
-  id:"dinge", face:"🐶", title:T("Dinge","Things"), backHref:"../../index.html",
-  intro:T("Ich sage ein Ding oder ein Tier – tippe auf das richtige Bild!",
-          "I'll say a thing or an animal – tap the right picture!"),
-  introHtml:T("Wir üben <b>Dinge & Tiere</b>! Ich sage etwas – tippe auf das passende Bild. 🐶",
-              "Let's practice <b>things & animals</b>! I'll say something – tap the matching picture. 🐶"),
+  id:"fahrzeuge", face:"🚗", title:T("Fahrzeuge","Vehicles"), backHref:"../../index.html",
+  intro:T("Ich sage ein Fahrzeug – tippe auf das richtige Bild!",
+          "I'll say a vehicle – tap the right picture!"),
+  introHtml:T("Wir üben <b>Fahrzeuge</b>! Ich sage ein Fahrzeug – tippe auf das passende Bild. 🚗",
+              "Let's practice <b>vehicles</b>! I'll say a vehicle – tap the matching picture. 🚗"),
   rounds: buildRounds()
 });
 </script>

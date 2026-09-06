@@ -16,8 +16,9 @@
 <canvas id="confetti" style="display:none"></canvas>
 <div id="app">
   <div class="topbar">
-    <div class="brand"><span class="logo">🎨</span><span>Farben</span></div>
+    <div class="brand"><span class="logo">🎨</span><span id="brandName">Farben</span></div>
     <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
     <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
   </div>
   <div id="screen"></div>
@@ -27,21 +28,24 @@
 <script src="../../shared/kid.js"></script>
 <script>
 "use strict";
-const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, clouds } = Kid;
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
 $("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Farben","Colors");
+wireLangButton($("#langBtn"));
 wireSoundButton($("#soundBtn"));
 clouds();
 
-/* Farben mit deutschem Namen + Farbwert */
+/* Farben zweisprachig (Deutsch/Englisch) + Farbwert */
 const COLORS=[
-  { name:"Rot",    hex:"#ff4d4d" },
-  { name:"Blau",   hex:"#3aa0ff" },
-  { name:"Gelb",   hex:"#ffd23f" },
-  { name:"Grün",   hex:"#3ad07f" },
-  { name:"Orange", hex:"#ff9f43" },
-  { name:"Lila",   hex:"#a06bff" },
-  { name:"Rosa",   hex:"#ff6fc4" },
-  { name:"Braun",  hex:"#b06a3a" }
+  { de:"Rot",    en:"Red",    hex:"#ff4d4d" },
+  { de:"Blau",   en:"Blue",   hex:"#3aa0ff" },
+  { de:"Gelb",   en:"Yellow", hex:"#ffd23f" },
+  { de:"Grün",   en:"Green",  hex:"#3ad07f" },
+  { de:"Orange", en:"Orange", hex:"#ff9f43" },
+  { de:"Lila",   en:"Purple", hex:"#a06bff" },
+  { de:"Rosa",   en:"Pink",   hex:"#ff6fc4" },
+  { de:"Braun",  en:"Brown",  hex:"#b06a3a" }
 ];
 
 const swatch=(hex,big)=>el("div",{class:big?"bigswatch":"swatch",style:"background:"+hex});
@@ -50,16 +54,16 @@ const swatch=(hex,big)=>el("div",{class:big?"bigswatch":"swatch",style:"backgrou
 function buildRounds(){
   const chosen=shuffle(COLORS).slice(0,8);
   return chosen.map(target=>{
-    const distract=shuffle(COLORS.filter(c=>c.name!==target.name)).slice(0,2);
+    const distract=shuffle(COLORS.filter(c=>c.de!==target.de)).slice(0,2);
     const options=[target,...distract].map(c=>({
-      ok:c.name===target.name,
+      ok:c.de===target.de,
       build:node=>node.append(swatch(c.hex))
     }));
     return {
-      say:"Tippe auf "+target.name,
+      say:T("Tippe auf "+target.de, "Tap on "+target.en),
       cols:3,
       prompt:host=>{
-        host.append(el("div",{class:"word",style:"color:"+target.hex},target.name));
+        host.append(el("div",{class:"word",style:"color:"+target.hex},T(target.de,target.en)));
       },
       options
     };
@@ -67,9 +71,11 @@ function buildRounds(){
 }
 
 pickGame({
-  id:"farben", face:"🎨", title:"Farben", backHref:"../../index.html",
-  intro:"Welche Farbe ist das? Hör gut zu und tippe auf die richtige Farbe!",
-  introHtml:"Wir üben <b>Farben</b>! Ich sage eine Farbe – tippe auf den passenden Kreis. 🎨",
+  id:"farben", face:"🎨", title:T("Farben","Colors"), backHref:"../../index.html",
+  intro:T("Welche Farbe ist das? Hör gut zu und tippe auf die richtige Farbe!",
+          "What color is this? Listen carefully and tap the right color!"),
+  introHtml:T("Wir üben <b>Farben</b>! Ich sage eine Farbe – tippe auf den passenden Kreis. 🎨",
+              "Let's practice <b>colors</b>! I'll say a color – tap the matching circle. 🎨"),
   rounds: buildRounds()
 });
 </script>

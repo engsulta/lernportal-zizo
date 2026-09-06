@@ -50,27 +50,48 @@ window.Kid = (function(){
     };
   })();
 
-  /* ---- Sprache (Deutsch vorlesen) --------------------------------------- */
+  /* ---- Sprache / Language (umschaltbar, gespeichert) -------------------- */
+  const Lang=(()=>{
+    const KEY="zizo_lernspass_lang";
+    const CODE={de:"de-DE", en:"en-US"};
+    let cur="de";
+    try{ const s=localStorage.getItem(KEY); if(s==="de"||s==="en") cur=s; }catch(e){}
+    // optionaler Erst-Start-Override: window.KID_LANG="en" vor kid.js
+    if(!localStorage.getItem(KEY) && (window.KID_LANG==="en"||window.KID_LANG==="de")) cur=window.KID_LANG;
+    return {
+      get(){ return cur; },
+      code(){ return CODE[cur]||"de-DE"; },
+      set(l){ if(l!=="de"&&l!=="en")return; cur=l; try{localStorage.setItem(KEY,l);}catch(e){} },
+      toggle(){ this.set(cur==="de"?"en":"de"); return cur; },
+      /* T("deutsch","english") -> Text in der aktuellen Sprache */
+      t(de,en){ return cur==="en" ? (en!=null?en:de) : de; }
+    };
+  })();
+
+  /* ---- Sprache vorlesen (Deutsch/Englisch, je nach Lang) ---------------- */
   const Speak=(()=>{
-    let voice=null, ready=false, enabled=true;
+    let enabled=true;
+    const voices={de:null,en:null};
     const supported = "speechSynthesis" in window;
-    function loadVoice(){
+    // bevorzugt eine freundliche Stimme je Sprache
+    const PREF={ de:/(anna|petra|marlene|female|kind|google)/i,
+                 en:/(samantha|karen|serena|female|kind|google|zira|aria|jenny)/i };
+    function loadVoices(){
       if(!supported)return;
-      const vs=speechSynthesis.getVoices();
-      if(!vs.length)return;
-      // bevorzugt eine deutsche Stimme (moeglichst eine freundliche/weibliche)
-      voice = vs.find(v=>/de[-_]/i.test(v.lang)&&/(anna|petra|marlene|female|kind|google)/i.test(v.name))
-           || vs.find(v=>/de[-_]/i.test(v.lang))
-           || vs.find(v=>/^de/i.test(v.lang)) || null;
-      ready=true;
+      const vs=speechSynthesis.getVoices(); if(!vs.length)return;
+      [["de",/de[-_]/i],["en",/en[-_]/i]].forEach(([k,re])=>{
+        voices[k]= vs.find(v=>re.test(v.lang)&&PREF[k].test(v.name))
+                || vs.find(v=>re.test(v.lang)) || null;
+      });
     }
-    if(supported){ loadVoice(); speechSynthesis.onvoiceschanged=loadVoice; }
+    if(supported){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
     function say(text,{rate=.92,pitch=1.15,cb}={}){
       if(!supported||!enabled||!text){ if(cb)setTimeout(cb,300); return; }
       try{
         speechSynthesis.cancel();
+        const lg=Lang.get();
         const u=new SpeechSynthesisUtterance(String(text));
-        u.lang="de-DE"; if(voice)u.voice=voice; u.rate=rate; u.pitch=pitch; u.volume=1;
+        u.lang=Lang.code(); if(voices[lg])u.voice=voices[lg]; u.rate=rate; u.pitch=pitch; u.volume=1;
         if(cb)u.onend=()=>cb();
         speechSynthesis.speak(u);
       }catch(e){ if(cb)setTimeout(cb,300); }
@@ -141,8 +162,14 @@ window.Kid = (function(){
   }
 
   /* Lob-Sprueche (werden vorgelesen – darum ohne Emoji im Sprech-Text) */
-  const PRAISE=["Super!","Toll gemacht!","Richtig!","Bravo!","Ganz stark!","Klasse!","Wunderbar!","Jaa, genau!"];
-  const TRYAGAIN=["Fast! Versuch es nochmal.","Hoppla, probier nochmal.","Schau nochmal genau hin."];
+  const PRAISE={
+    de:["Super!","Toll gemacht!","Richtig!","Bravo!","Ganz stark!","Klasse!","Wunderbar!","Jaa, genau!"],
+    en:["Great!","Well done!","Correct!","Bravo!","Awesome!","Nice job!","Wonderful!","Yes, exactly!"]
+  };
+  const TRYAGAIN={
+    de:["Fast! Versuch es nochmal.","Hoppla, probier nochmal.","Schau nochmal genau hin."],
+    en:["Almost! Try again.","Oops, try again.","Look closely again."]
+  };
 
   /* =======================================================================
      pickGame  –  DER Bauplan fuer alle Spiele
@@ -165,10 +192,10 @@ window.Kid = (function(){
 
     function header(){
       const bar=el("div",{class:"topbar",style:"margin-bottom:12px"});
-      bar.append(el("button",{class:"iconbtn",title:"Zurück",
+      bar.append(el("button",{class:"iconbtn",title:Lang.t("Zurück","Back"),
         onclick:()=>{ Speak.stop(); location.href=cfg.backHref||"../../index.html"; }},"🏠"));
       bar.append(el("div",{class:"brand"},el("span",{},cfg.face+" "+cfg.title)));
-      bar.append(el("button",{class:"iconbtn",title:"Nochmal hören",
+      bar.append(el("button",{class:"iconbtn",title:Lang.t("Nochmal hören","Listen again"),
         onclick:()=>{ Sound.click(); sayPrompt(); }},"🔊"));
       return bar;
     }
@@ -190,7 +217,7 @@ window.Kid = (function(){
       const promptCard=el("div",{class:"card"});
       const pr=el("div",{class:"prompt"});
       if(r.prompt) r.prompt(pr);
-      pr.append(el("button",{class:"sayagain",onclick:()=>{Sound.click();sayPrompt();}},"🔊 Nochmal hören"));
+      pr.append(el("button",{class:"sayagain",onclick:()=>{Sound.click();sayPrompt();}},"🔊 "+Lang.t("Nochmal hören","Listen again")));
       promptCard.append(pr);
       scr.append(promptCard);
 
@@ -205,7 +232,7 @@ window.Kid = (function(){
             node.classList.add("correct"); Sound.good();
             $$(".opt",grid).forEach(x=>{ if(x!==node)x.classList.add("dim"); });
             if(!retriedThis) firstTryPerfect++;
-            const praise=pick(PRAISE);
+            const praise=pick(PRAISE[Lang.get()]);
             fb.className="feedback show ok"; fb.innerHTML="";
             fb.append(el("span",{class:"fi"},"🎉"), el("div",{},praise));
             Store.addSticker();
@@ -215,7 +242,7 @@ window.Kid = (function(){
           } else {
             node.classList.add("wrong"); Sound.wrong(); retriedThis=true;
             setTimeout(()=>node.classList.remove("wrong"),500);
-            const t=pick(TRYAGAIN);
+            const t=pick(TRYAGAIN[Lang.get()]);
             fb.className="feedback show no"; fb.innerHTML="";
             fb.append(el("span",{class:"fi"},"💡"), el("div",{},t));
             Speak.say(t);
@@ -245,13 +272,13 @@ window.Kid = (function(){
 
       const card=el("div",{class:"card center"});
       card.append(el("div",{class:"badge"},cfg.face));
-      card.append(el("div",{class:"huge"},"Geschafft! 🎉"));
+      card.append(el("div",{class:"huge"},Lang.t("Geschafft!","All done!")+" 🎉"));
       const st=el("div",{class:"bigstars"});
       for(let k=0;k<3;k++)st.append(el("span",{class:"s"},"★"));
       card.append(st);
       const nav=el("div",{style:"margin-top:14px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"});
-      nav.append(el("button",{class:"btn green lg",onclick:()=>{Sound.click();play();}},"↻ Nochmal spielen"));
-      nav.append(el("button",{class:"btn blue",onclick:()=>{Sound.click();Speak.stop();location.href=cfg.backHref||"../../index.html";}},"🏠 Zurück"));
+      nav.append(el("button",{class:"btn green lg",onclick:()=>{Sound.click();play();}},"↻ "+Lang.t("Nochmal spielen","Play again")));
+      nav.append(el("button",{class:"btn blue",onclick:()=>{Sound.click();Speak.stop();location.href=cfg.backHref||"../../index.html";}},"🏠 "+Lang.t("Zurück","Back")));
       card.append(nav);
       scr.append(card);
       setScreen(scr);
@@ -260,7 +287,7 @@ window.Kid = (function(){
         for(let k=0;k<stars;k++)setTimeout(()=>{ss[k].classList.add("on");Sound.good();},k*350);
       },200);
       Confetti.burst(stars>=3?230:150); Sound.win();
-      Speak.say("Wunderbar! Du hast alles geschafft!");
+      Speak.say(Lang.t("Wunderbar! Du hast alles geschafft!","Wonderful! You did it all!"));
       if(cfg.onDone) cfg.onDone(stars);
     }
 
@@ -277,7 +304,7 @@ window.Kid = (function(){
       scr.append(header());
       scr.append(mascotRow(cfg.face, cfg.introHtml||("<b>"+cfg.title+"</b>")));
       const card=el("div",{class:"card center"});
-      card.append(el("button",{class:"btn green lg",onclick:()=>{Sound.click();play();}},"▶ Los geht's!"));
+      card.append(el("button",{class:"btn green lg",onclick:()=>{Sound.click();play();}},"▶ "+Lang.t("Los geht's!","Let's go!")));
       scr.append(card);
       setScreen(scr);
       if(cfg.intro) setTimeout(()=>Speak.say(cfg.intro),400);
@@ -296,6 +323,18 @@ window.Kid = (function(){
     });
   }
 
+  /* Sprach-Umschalter (Deutsch/Englisch) fuer den Kopf-Button einer Seite.
+     Tippen wechselt die Sprache und laedt die Seite neu, damit ALLES (Stimme
+     und Text) sofort in der neuen Sprache erscheint. */
+  function wireLangButton(btn){
+    if(!btn)return;
+    btn.textContent = Lang.get()==="de" ? "🇩🇪" : "🇺🇸";
+    btn.title = "Sprache / Language";
+    btn.addEventListener("click",function(){
+      Sound.click(); Lang.toggle(); location.reload();
+    });
+  }
+
   /* dekorative Wolken */
   function clouds(n=4){ const b=document.body;
     for(let i=0;i<n;i++){ const c=el("div",{class:"cloud"});
@@ -303,5 +342,6 @@ window.Kid = (function(){
       c.style.animationDuration=(42+rnd(0,40))+"s"; c.style.animationDelay=(-rnd(0,40))+"s"; b.append(c);} }
 
   return { $, $$, el, rnd, pick, shuffle, Sound, Speak, Confetti, Store,
-           toast, setScreen, mascotRow, pickGame, wireSoundButton, clouds };
+           toast, setScreen, mascotRow, pickGame, wireSoundButton, clouds,
+           Lang, T:(de,en)=>Lang.t(de,en), wireLangButton };
 })();

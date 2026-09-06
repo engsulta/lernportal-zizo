@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gegenteile ⚖️ – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">⚖️</span><span id="brandName">Gegenteile</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Gegenteile","Opposites");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Gegenteil-Fragen: richtiges Bild (ok) + Gegenteil (no); ein weiteres
+   Bild kommt als Ablenkung dazu. Genau eine richtige Antwort pro Runde. */
+const PAIRS=[
+  { qd:"Tippe auf das große Tier",  qe:"Tap the big animal",   ok:"🐘", no:"🐭" },
+  { qd:"Tippe auf das kleine Tier", qe:"Tap the small animal", ok:"🐭", no:"🐘" },
+  { qd:"Tippe auf etwas Heißes",    qe:"Tap something hot",     ok:"🔥", no:"❄️" },
+  { qd:"Tippe auf etwas Kaltes",    qe:"Tap something cold",    ok:"❄️", no:"🔥" },
+  { qd:"Tippe auf das schnelle Tier", qe:"Tap the fast animal", ok:"🐆", no:"🐢" },
+  { qd:"Tippe auf das langsame Tier", qe:"Tap the slow animal", ok:"🐢", no:"🐆" },
+  { qd:"Tippe auf den Tag",         qe:"Tap the daytime",       ok:"☀️", no:"🌙" },
+  { qd:"Tippe auf die Nacht",       qe:"Tap the nighttime",     ok:"🌙", no:"☀️" },
+  { qd:"Tippe auf etwas Nasses",    qe:"Tap something wet",     ok:"💧", no:"🏜️" },
+  { qd:"Tippe auf etwas Trockenes", qe:"Tap something dry",     ok:"🏜️", no:"💧" }
+];
+const ALL_GLYPHS=[...new Set(PAIRS.flatMap(p=>[p.ok,p.no]))];
+
+function buildRounds(){
+  const chosen=shuffle(PAIRS).slice(0,8);
+  return chosen.map(p=>{
+    const extra=pick(ALL_GLYPHS.filter(g=>g!==p.ok&&g!==p.no));
+    const options=[
+      {ok:true,  glyph:p.ok},
+      {ok:false, glyph:p.no},
+      {ok:false, glyph:extra}
+    ].map(o=>({ ok:o.ok, build:node=>node.append(el("div",{class:"glyph"},o.glyph)) }));
+    return {
+      say:T(p.qd+"!", p.qe+"!"),
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},"👂")),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"gegenteile", face:"⚖️", title:T("Gegenteile","Opposites"), backHref:"../../index.html",
+  intro:T("Ich sage etwas – tippe auf das richtige Bild! Groß oder klein, heiß oder kalt?",
+          "I'll say something – tap the right picture! Big or small, hot or cold?"),
+  introHtml:T("Wir üben <b>Gegenteile</b>! Groß und klein, heiß und kalt – tippe auf das Richtige. ⚖️",
+              "Let's practice <b>opposites</b>! Big and small, hot and cold – tap the right one. ⚖️"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

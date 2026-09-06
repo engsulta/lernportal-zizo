@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Obst &amp; Gemüse 🍓 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🍓</span><span id="brandName">Obst &amp; Gemüse</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Obst & Gemüse","Fruit & veg");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Obst & Gemüse zweisprachig (Deutsch mit Artikel / Englisch) */
+const FOOD=[
+  {de:"der Apfel",        en:"the apple",       glyph:"🍎"},
+  {de:"die Banane",       en:"the banana",      glyph:"🍌"},
+  {de:"die Erdbeere",     en:"the strawberry",  glyph:"🍓"},
+  {de:"die Karotte",      en:"the carrot",      glyph:"🥕"},
+  {de:"die Tomate",       en:"the tomato",      glyph:"🍅"},
+  {de:"die Weintrauben",  en:"the grapes",      glyph:"🍇"},
+  {de:"die Orange",       en:"the orange",      glyph:"🍊"},
+  {de:"die Wassermelone", en:"the watermelon",  glyph:"🍉"},
+  {de:"der Brokkoli",     en:"the broccoli",    glyph:"🥦"},
+  {de:"die Zitrone",      en:"the lemon",       glyph:"🍋"},
+  {de:"die Birne",        en:"the pear",        glyph:"🍐"},
+  {de:"der Mais",         en:"the corn",        glyph:"🌽"}
+];
+
+function buildRounds(){
+  const chosen=shuffle(FOOD).slice(0,8);
+  return chosen.map(target=>{
+    const distract=shuffle(FOOD.filter(f=>f.glyph!==target.glyph)).slice(0,2);
+    const options=[target,...distract].map(f=>({
+      ok:f.glyph===target.glyph,
+      build:node=>node.append(el("div",{class:"glyph"},f.glyph))
+    }));
+    return {
+      say:T("Wo ist "+target.de+"? Tippe darauf!", "Where is "+target.en+"? Tap it!"),
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},"👂")),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"essen", face:"🍓", title:T("Obst & Gemüse","Fruit & veg"), backHref:"../../index.html",
+  intro:T("Ich sage etwas zu essen – tippe auf das richtige Bild!",
+          "I'll say a food – tap the right picture!"),
+  introHtml:T("Wir üben <b>Obst & Gemüse</b>! Ich sage etwas – tippe auf das passende Bild. 🍓",
+              "Let's practice <b>fruit & veg</b>! I'll say a food – tap the matching picture. 🍓"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

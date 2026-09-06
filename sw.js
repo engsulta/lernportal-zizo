@@ -1,6 +1,6 @@
 /* Service Worker – macht die Zizo-App installierbar und offline-fähig.
    Strategie „network-first": online immer frisch, offline die letzte Kopie. */
-const CACHE = "zizo-v1";
+const CACHE = "zizo-v2";
 const PRECACHE = [
   "./",
   "index.html",
@@ -11,6 +11,13 @@ const PRECACHE = [
   "topics/zahlen/index.html",
   "topics/formen/index.html",
   "topics/dinge/index.html",
+  "topics/buchstaben/index.html",
+  "topics/tiere/index.html",
+  "topics/fahrzeuge/index.html",
+  "topics/gegenteile/index.html",
+  "topics/gefuehle/index.html",
+  "topics/essen/index.html",
+  "topics/koerper/index.html",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/apple-touch-icon.png"

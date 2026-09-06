@@ -44,6 +44,13 @@ python3 -m http.server 8001
 # open http://localhost:8001  (tap once to enable sound; needs a browser voice)
 ```
 
+## Deploy (live site)
+- **Live URL:** https://engsulta.github.io/lernportal-zizo/
+- **Repo:** https://github.com/engsulta/lernportal-zizo (public, GitHub Pages
+  served from `main` branch, root folder).
+- To publish changes: commit and `git push`; Pages rebuilds automatically in
+  ~1 min. This is a separate repo from the `lernportal-2klasse` portal.
+
 ## Conventions
 - German UI, minimal on-screen text; the child **hears** every instruction and
   praise, so `say`/`intro` text must fully describe the task without reading.

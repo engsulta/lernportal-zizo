@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Buchstaben 🔤 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🔤</span><span id="brandName">Buchstaben</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Buchstaben","Letters");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+const LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+/* 8 Runden: "Tippe auf das A" – neutrales Symbol oben, 3 Buchstaben-Kacheln */
+function buildRounds(){
+  const chosen=shuffle(LETTERS).slice(0,8);
+  return chosen.map(target=>{
+    const distract=shuffle(LETTERS.filter(l=>l!==target)).slice(0,2);
+    const options=[target,...distract].map(l=>({
+      ok:l===target,
+      build:node=>node.append(el("div",{class:"numeral"},l))
+    }));
+    return {
+      say:T("Tippe auf das "+target, "Tap the letter "+target),
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},"🔤")),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"buchstaben", face:"🔤", title:T("Buchstaben","Letters"), backHref:"../../index.html",
+  intro:T("Ich sage einen Buchstaben – tippe auf den richtigen Buchstaben!",
+          "I'll say a letter – tap the right letter!"),
+  introHtml:T("Wir üben <b>Buchstaben</b>! Ich sage einen Buchstaben – tippe auf den passenden. 🔤",
+              "Let's practice <b>letters</b>! I'll say a letter – tap the matching one. 🔤"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

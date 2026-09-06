@@ -20,6 +20,7 @@
   <div class="topbar">
     <div class="brand"><span class="logo">🌟</span><span>Zizo Lern-Spaß</span></div>
     <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
     <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
   </div>
   <div id="screen"></div>
@@ -30,14 +31,22 @@
 <script src="shared/kid.js"></script>
 <script>
 "use strict";
-const { el, $, Sound, Speak, Store, setScreen, mascotRow, wireSoundButton, clouds } = Kid;
+const { el, $, Sound, Speak, Store, setScreen, mascotRow, wireSoundButton, wireLangButton, clouds, T } = Kid;
+document.documentElement.lang = Kid.Lang.get();
 
-/* Die vier Lern-Bereiche fuer Zizo (4 Jahre) */
+/* Alle Lern-Bereiche fuer Zizo (4 Jahre) – zweisprachig (Deutsch/Englisch) */
 const ACTIVITIES=[
-  { id:"farben", face:"🎨", name:"Farben",  say:"Farben", href:"topics/farben/index.html" },
-  { id:"zahlen", face:"🔢", name:"Zahlen",  say:"Zahlen zählen", href:"topics/zahlen/index.html" },
-  { id:"formen", face:"⭐", name:"Formen",  say:"Formen", href:"topics/formen/index.html" },
-  { id:"dinge",  face:"🐶", name:"Dinge",   say:"Dinge und Tiere", href:"topics/dinge/index.html" }
+  { id:"farben",     face:"🎨", de:"Farben",        en:"Colors",        sayDe:"Farben",          sayEn:"Colors",                href:"topics/farben/index.html" },
+  { id:"zahlen",     face:"🔢", de:"Zahlen",        en:"Numbers",       sayDe:"Zahlen zählen",   sayEn:"Counting numbers",      href:"topics/zahlen/index.html" },
+  { id:"formen",     face:"⭐", de:"Formen",        en:"Shapes",        sayDe:"Formen",          sayEn:"Shapes",                href:"topics/formen/index.html" },
+  { id:"dinge",      face:"🐶", de:"Dinge",         en:"Things",        sayDe:"Dinge und Tiere", sayEn:"Things and animals",    href:"topics/dinge/index.html" },
+  { id:"buchstaben", face:"🔤", de:"Buchstaben",    en:"Letters",       sayDe:"Buchstaben",      sayEn:"Letters",               href:"topics/buchstaben/index.html" },
+  { id:"tiere",      face:"🐄", de:"Tierstimmen",   en:"Animal sounds", sayDe:"Tierstimmen",     sayEn:"Animal sounds",         href:"topics/tiere/index.html" },
+  { id:"fahrzeuge",  face:"🚗", de:"Fahrzeuge",     en:"Vehicles",      sayDe:"Fahrzeuge",       sayEn:"Vehicles",              href:"topics/fahrzeuge/index.html" },
+  { id:"gegenteile", face:"⚖️", de:"Gegenteile",    en:"Opposites",     sayDe:"Gegenteile",      sayEn:"Opposites",             href:"topics/gegenteile/index.html" },
+  { id:"gefuehle",   face:"😊", de:"Gefühle",       en:"Feelings",      sayDe:"Gefühle",         sayEn:"Feelings",              href:"topics/gefuehle/index.html" },
+  { id:"essen",      face:"🍓", de:"Obst & Gemüse", en:"Fruit & veg",   sayDe:"Obst und Gemüse", sayEn:"Fruit and vegetables",  href:"topics/essen/index.html" },
+  { id:"koerper",    face:"👃", de:"Körperteile",   en:"Body parts",    sayDe:"Körperteile",     sayEn:"Body parts",            href:"topics/koerper/index.html" }
 ];
 
 function updTotal(){ const e=$("#totalStars"); if(e) e.textContent=Store.total(); }
@@ -46,21 +55,23 @@ function renderHub(){
   updTotal();
   const wrap=el("div",{class:"screen"});
   wrap.append(el("h1",{class:"hub-title"},"🌟 Zizo Lern-Spaß"));
-  wrap.append(el("div",{class:"hub-sub"},"Tippe auf ein Bild und leg los!"));
-  wrap.append(mascotRow("🐣","Hallo <b>Zizo</b>! Was möchtest du heute lernen? Tippe auf ein Bild! 🎉"));
+  wrap.append(el("div",{class:"hub-sub"},T("Tippe auf ein Bild und leg los!","Tap a picture and let's go!")));
+  wrap.append(mascotRow("🐣",T(
+    "Hallo <b>Zizo</b>! Was möchtest du heute lernen? Tippe auf ein Bild! 🎉",
+    "Hi <b>Zizo</b>! What would you like to learn today? Tap a picture! 🎉")));
 
   const grid=el("div",{class:"tiles"});
   ACTIVITIES.forEach(a=>{
     const stars=Store.stars(a.id);
     const tile=el("div",{class:"tile"+(stars>0?" done":"")});
     tile.append(el("span",{class:"emoji"},a.face));
-    tile.append(el("div",{class:"nm"},a.name));
+    tile.append(el("div",{class:"nm"},T(a.de,a.en)));
     const sd=el("div",{class:"stars"});
     for(let k=0;k<3;k++) sd.append(el("span",{class:"s"+(k<stars?" on":"")},"★"));
     tile.append(sd);
     tile.addEventListener("click",()=>{
       Sound.click();
-      Speak.say(a.say,{cb:()=>{ location.href=a.href; }});
+      Speak.say(T(a.sayDe,a.sayEn),{cb:()=>{ location.href=a.href; }});
       // Fallback, falls keine Sprachausgabe verfügbar ist
       setTimeout(()=>{ location.href=a.href; }, 900);
     });
@@ -70,17 +81,18 @@ function renderHub(){
 
   const foot=el("div",{class:"center",style:"margin-top:22px"});
   foot.append(el("button",{class:"btn gray",onclick:()=>{
-    if(confirm("Alle Sterne von Zizo zurücksetzen?")){ Store.resetAll(); renderHub(); }
-  }},"↺ Neu anfangen"));
+    if(confirm(T("Alle Sterne von Zizo zurücksetzen?","Reset all of Zizo's stars?"))){ Store.resetAll(); renderHub(); }
+  }},"↺ "+T("Neu anfangen","Start over")));
   wrap.append(foot);
 
   setScreen(wrap);
 }
 
+wireLangButton($("#langBtn"));
 wireSoundButton($("#soundBtn"));
 clouds();
 renderHub();
-Speak.say("Hallo Zizo! Tippe auf ein Bild.");
+Speak.say(T("Hallo Zizo! Tippe auf ein Bild.","Hi Zizo! Tap a picture."));
 
 if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 </script>

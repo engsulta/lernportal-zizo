@@ -16,8 +16,9 @@
 <canvas id="confetti" style="display:none"></canvas>
 <div id="app">
   <div class="topbar">
-    <div class="brand"><span class="logo">🔢</span><span>Zahlen</span></div>
+    <div class="brand"><span class="logo">🔢</span><span id="brandName">Zahlen</span></div>
     <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
     <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
   </div>
   <div id="screen"></div>
@@ -27,13 +28,17 @@
 <script src="../../shared/kid.js"></script>
 <script>
 "use strict";
-const { el, $, rnd, pick, shuffle, Store, pickGame, wireSoundButton, clouds } = Kid;
+const { el, $, rnd, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
 $("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Zahlen","Numbers");
+wireLangButton($("#langBtn"));
 wireSoundButton($("#soundBtn"));
 clouds();
 
 const OBJECTS=["🍎","⭐","🐟","🎈","🐝","🌸","🚗","🐸","🍓","🦋"];
-const WORD={1:"eins",2:"zwei",3:"drei",4:"vier",5:"fünf",6:"sechs",7:"sieben",8:"acht",9:"neun",10:"zehn"};
+const WORD_DE={1:"eins",2:"zwei",3:"drei",4:"vier",5:"fünf",6:"sechs",7:"sieben",8:"acht",9:"neun",10:"zehn"};
+const WORD_EN={1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",9:"nine",10:"ten"};
 
 /* drei Zahl-Kacheln: die richtige + zwei Nachbarn */
 function numberOptions(correct,maxN){
@@ -51,7 +56,7 @@ function buildRounds(){
   for(let k=0;k<5;k++){
     const n=rnd(1,7), emoji=pick(OBJECTS);
     rounds.push({
-      say:"Zähle! Wie viele sind es?",
+      say:T("Zähle! Wie viele sind es?","Count! How many are there?"),
       cols:3,
       prompt:host=>{
         const row=el("div",{class:"countrow"});
@@ -65,7 +70,7 @@ function buildRounds(){
   const targets=shuffle([2,3,4,5,6,7,8,9,10]).slice(0,3);
   targets.forEach(n=>{
     rounds.push({
-      say:"Tippe auf die Zahl "+WORD[n],
+      say:T("Tippe auf die Zahl "+WORD_DE[n], "Tap the number "+WORD_EN[n]),
       cols:3,
       prompt:host=>host.append(el("div",{class:"bigglyph"},"🔢")),
       options:numberOptions(n,10)
@@ -75,9 +80,11 @@ function buildRounds(){
 }
 
 pickGame({
-  id:"zahlen", face:"🔢", title:"Zahlen", backHref:"../../index.html",
-  intro:"Wir zählen zusammen! Zähle die Bilder und tippe auf die richtige Zahl.",
-  introHtml:"Wir üben <b>Zahlen</b>! Zähle die Bilder und tippe auf die passende Zahl. 🔢",
+  id:"zahlen", face:"🔢", title:T("Zahlen","Numbers"), backHref:"../../index.html",
+  intro:T("Wir zählen zusammen! Zähle die Bilder und tippe auf die richtige Zahl.",
+          "Let's count together! Count the pictures and tap the right number."),
+  introHtml:T("Wir üben <b>Zahlen</b>! Zähle die Bilder und tippe auf die passende Zahl. 🔢",
+              "Let's practice <b>numbers</b>! Count the pictures and tap the matching number. 🔢"),
   rounds: buildRounds()
 });
 </script>
