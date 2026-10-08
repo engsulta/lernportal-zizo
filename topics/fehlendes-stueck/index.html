@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fehlendes Stück 🧩 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🧩</span><span id="brandName">Fehlendes Stück</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Fehlendes Stück","Missing Piece");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Einzelne Teil-Striche (als Auswahl-Kacheln). Das Kind sucht das Teil, dessen
+   Form zur gestrichelten Lücke passt: gerade, schräg oder rund. */
+const PIECE={
+  H:'<line x1="18" y1="50" x2="82" y2="50"/>',                 /* —  */
+  V:'<line x1="50" y1="18" x2="50" y2="82"/>',                 /* |  */
+  dA:'<line x1="25" y1="25" x2="75" y2="75"/>',                /* ╲  */
+  dB:'<line x1="25" y1="75" x2="75" y2="25"/>',                /* ╱  */
+  arc:'<path d="M20,62 Q50,22 80,62"/>',                        /* ⌒  */
+  arcR:'<path d="M38,22 A30,30 0 0 1 38,78"/>',                 /* )  */
+  corner:'<polyline points="30,30 30,70 70,70"/>'              /* L  */
+};
+/* ein Teil als SVG in einer Options-Kachel */
+function strokeSvg(inner){
+  return el("div",{class:"shape",
+    html:'<svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="#2a3d55" '+
+         'stroke-width="9" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>'});
+}
+/* die unvollständige Form oben: durchgezogener Körper + gestrichelte Lücke */
+function promptSvg(body,gap){
+  return el("div",{class:"bigshape",
+    html:'<svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke-linecap="round" stroke-linejoin="round">'+
+         '<path d="'+body+'" stroke="#2a3d55" stroke-width="9"/>'+
+         '<path d="'+gap+'" stroke="#b8c6d6" stroke-width="7" stroke-dasharray="2 9"/></svg>'});
+}
+function round(body,gap,correct,w1,w2){
+  const parts=[{ok:true,p:correct},{ok:false,p:w1},{ok:false,p:w2}];
+  return {
+    say:T("Welches Stück fehlt? Finde das Teil, das in die Lücke passt!",
+          "Which piece is missing? Find the piece that fits the gap!"),
+    cols:3,
+    prompt:host=>host.append(promptSvg(body,gap)),
+    options:parts.map(o=>({ ok:o.ok, build:node=>node.append(strokeSvg(PIECE[o.p])) }))
+  };
+}
+
+function buildRounds(){
+  const rounds=[
+    /* Dreieck – Grundlinie fehlt (gerade) */
+    round('M50,15 L20,80 M50,15 L80,80', 'M20,80 L80,80', "H","arc","dA"),
+    /* Quadrat – obere Seite fehlt (gerade) */
+    round('M20,20 L20,80 L80,80 L80,20', 'M20,20 L80,20', "H","arcR","dB"),
+    /* Kreis – oberer Bogen fehlt (rund) */
+    round('M63,22 A30,30 0 1 1 37,22', 'M37,22 A30,30 0 0 1 63,22', "arc","H","corner"),
+    /* Raute – obere rechte Seite fehlt (schräg ╲) */
+    round('M50,15 L15,50 L50,85 L85,50', 'M50,15 L85,50', "dA","H","arc"),
+    /* D-Form – runder Teil fehlt (rund) */
+    round('M35,20 L35,80', 'M35,20 A32,32 0 0 1 35,80', "arcR","V","dA"),
+    /* Dreieck – linke Seite fehlt (schräg ╱) */
+    round('M50,15 L80,80 L20,80', 'M50,15 L20,80', "dB","H","arc"),
+    /* Quadrat – rechte Seite fehlt (senkrecht) */
+    round('M80,20 L20,20 L20,80 L80,80', 'M80,20 L80,80', "V","arcR","dA"),
+    /* D-Form – gerade Seite fehlt (senkrecht) */
+    round('M35,20 A32,32 0 0 1 35,80', 'M35,20 L35,80', "V","arc","dB")
+  ];
+  return rounds;
+}
+
+pickGame({
+  id:"fehlendes-stueck", face:"🧩", title:T("Fehlendes Stück","Missing Piece"), backHref:"../../index.html",
+  intro:T("Ein Teil der Form fehlt! Schau auf die gestrichelte Lücke und finde das passende Stück.",
+          "A piece of the shape is missing! Look at the dotted gap and find the piece that fits."),
+  introHtml:T("Wir vervollständigen <b>Formen</b>! Oben fehlt ein Stück (gestrichelt). Finde unten das <b>passende Teil</b>. 🧩",
+              "Let's complete <b>shapes</b>! A piece is missing up top (dotted). Find the <b>matching piece</b> below. 🧩"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

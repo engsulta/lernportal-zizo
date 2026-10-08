@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Schatten 🌑 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+<style>
+/* Schatten = schwarze Silhouette des Emojis */
+.opt .glyph.shadow, .prompt .bigglyph.shadow{ filter:brightness(0); }
+</style>
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🌑</span><span id="brandName">Schatten</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Schatten","Shadows");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Dinge mit klar unterscheidbarer Silhouette (zweisprachig, mit Artikel) */
+const ITEMS=[
+  {de:"der Elefant",       en:"the elephant", glyph:"🐘"},
+  {de:"die Giraffe",       en:"the giraffe",  glyph:"🦒"},
+  {de:"der Schmetterling", en:"the butterfly",glyph:"🦋"},
+  {de:"die Schildkröte",   en:"the turtle",   glyph:"🐢"},
+  {de:"der Fisch",         en:"the fish",     glyph:"🐟"},
+  {de:"die Ente",          en:"the duck",     glyph:"🦆"},
+  {de:"der Baum",          en:"the tree",     glyph:"🌳"},
+  {de:"das Haus",          en:"the house",    glyph:"🏠"},
+  {de:"das Auto",          en:"the car",      glyph:"🚗"},
+  {de:"der Stern",         en:"the star",     glyph:"⭐"},
+  {de:"der Pilz",          en:"the mushroom", glyph:"🍄"},
+  {de:"der Regenschirm",   en:"the umbrella", glyph:"☂️"}
+];
+
+/* eine Schatten-Kachel (schwarze Silhouette) */
+const shadow = g => el("div",{class:"glyph shadow"}, g);
+
+function buildRounds(){
+  const chosen=shuffle(ITEMS).slice(0,8);
+  return chosen.map(target=>{
+    const distract=shuffle(ITEMS.filter(t=>t.glyph!==target.glyph)).slice(0,2);
+    const options=shuffle([target,...distract]).map(t=>({
+      ok:t.glyph===target.glyph,
+      build:node=>node.append(shadow(t.glyph))
+    }));
+    return {
+      say:T("Das ist "+target.de+". Welcher Schatten passt?",
+            "This is "+target.en+". Which shadow matches?"),
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},target.glyph)),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"schatten", face:"🌑", title:T("Schatten","Shadows"), backHref:"../../index.html",
+  intro:T("Finde den richtigen Schatten! Oben siehst du ein Bild – welcher schwarze Schatten passt dazu?",
+          "Find the right shadow! You see a picture up top – which black shadow matches it?"),
+  introHtml:T("Wir üben <b>Schatten</b>! Oben ist ein Bild – tippe unten auf den <b>passenden Schatten</b>. 🌑",
+              "Let's practice <b>shadows</b>! A picture is on top – tap the <b>matching shadow</b> below. 🌑"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>
