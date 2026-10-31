@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dinge um mich 🏠 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🏠</span><span id="brandName">Dinge um mich</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Dinge um mich","Around me");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Alltags-Dinge, die Zizo um sich herum sieht (zweisprachig, mit Artikel) */
+const THINGS=[
+  {de:"der Stuhl",      en:"the chair",      glyph:"🪑"},
+  {de:"das Bett",       en:"the bed",        glyph:"🛏️"},
+  {de:"die Tür",        en:"the door",       glyph:"🚪"},
+  {de:"das Fenster",    en:"the window",     glyph:"🪟"},
+  {de:"die Lampe",      en:"the lamp",       glyph:"💡"},
+  {de:"die Uhr",        en:"the clock",      glyph:"⏰"},
+  {de:"der Schlüssel",  en:"the key",        glyph:"🔑"},
+  {de:"das Telefon",    en:"the phone",      glyph:"☎️"},
+  {de:"die Zahnbürste", en:"the toothbrush", glyph:"🪥"},
+  {de:"der Löffel",     en:"the spoon",      glyph:"🥄"},
+  {de:"der Teller",     en:"the plate",      glyph:"🍽️"},
+  {de:"der Becher",     en:"the cup",        glyph:"🥤"},
+  {de:"das Buch",       en:"the book",       glyph:"📚"},
+  {de:"der Ball",       en:"the ball",       glyph:"⚽"},
+  {de:"der Schuh",      en:"the shoe",       glyph:"👟"},
+  {de:"die Schere",     en:"the scissors",   glyph:"✂️"}
+];
+
+function buildRounds(){
+  const chosen=shuffle(THINGS).slice(0,8);
+  return chosen.map(target=>{
+    const distract=shuffle(THINGS.filter(t=>t.glyph!==target.glyph)).slice(0,2);
+    const options=shuffle([target,...distract]).map(t=>({
+      ok:t.glyph===target.glyph,
+      build:node=>node.append(el("div",{class:"glyph"},t.glyph))
+    }));
+    return {
+      say:T("Wo ist "+target.de+"? Tippe darauf!", "Where is "+target.en+"? Tap it!"),
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},"👂")),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"umgebung", face:"🏠", title:T("Dinge um mich","Around me"), backHref:"../../index.html",
+  intro:T("Ich sage ein Ding aus deinem Zuhause – tippe auf das richtige Bild!",
+          "I'll say a thing from your home – tap the right picture!"),
+  introHtml:T("Wir lernen <b>Dinge um uns herum</b>! Ich sage ein Ding – tippe auf das passende Bild. 🏠",
+              "Let's learn <b>things around us</b>! I'll say a thing – tap the matching picture. 🏠"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

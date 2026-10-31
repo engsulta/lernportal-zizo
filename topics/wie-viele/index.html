@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wie viele? 🍎 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+<style>
+/* Zähl-Szene: viele Früchte dicht nebeneinander, gut zum Abzählen */
+.countscene{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px 10px; max-width:460px; margin:0 auto; }
+.countscene .glyph{ font-size:40px; line-height:1; }
+</style>
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🍎</span><span id="brandName">Wie viele?</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, rnd, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Wie viele?","How many?");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Früchte wie im Arbeitsblatt – mit Mehrzahl in beiden Sprachen */
+const FRUITS=[
+  {g:"🍎", pd:"Äpfel",       pe:"apples"},
+  {g:"🍇", pd:"Weintrauben", pe:"grapes"},
+  {g:"🥭", pd:"Mangos",      pe:"mangoes"},
+  {g:"🍍", pd:"Ananas",      pe:"pineapples"},
+  {g:"🥑", pd:"Avocados",    pe:"avocados"},
+  {g:"🍊", pd:"Orangen",     pe:"oranges"},
+  {g:"🍉", pd:"Melonen",     pe:"watermelons"},
+  {g:"🍓", pd:"Erdbeeren",   pe:"strawberries"}
+];
+
+/* drei Zahl-Kacheln: die richtige Anzahl + zwei Nachbarn */
+function numberOptions(correct,maxN){
+  const set=new Set([correct]);
+  while(set.size<3){ let d=correct+pick([-2,-1,1,2]); if(d>=1&&d<=maxN) set.add(d); }
+  return shuffle([...set]).map(n=>({
+    ok:n===correct,
+    build:node=>node.append(el("div",{class:"numeral"},String(n)))
+  }));
+}
+
+/* Baue 8 Runden: zeige eine gemischte Frucht-Szene, frage nach EINER Fruchtart */
+function buildRounds(){
+  return shuffle(FRUITS).slice(0,8).map(target=>{
+    const n=rnd(2,5);                                   // so oft kommt die Zielfrucht vor
+    const others=FRUITS.filter(f=>f.g!==target.g);
+    const items=[];
+    for(let i=0;i<n;i++) items.push(target.g);          // genau n Zielfrüchte
+    const extra=rnd(4,7);
+    for(let i=0;i<extra;i++) items.push(pick(others).g);// andere Früchte als Ablenkung
+    const mixed=shuffle(items);
+    return {
+      say:T("Wie viele "+target.pd+" siehst du? Zähle!",
+            "How many "+target.pe+" do you see? Count them!"),
+      cols:3,
+      prompt:host=>{
+        const scene=el("div",{class:"countscene"});
+        mixed.forEach(g=>scene.append(el("span",{class:"glyph"},g)));
+        host.append(scene);
+      },
+      options:numberOptions(n,9)
+    };
+  });
+}
+
+pickGame({
+  id:"wie-viele", face:"🍎", title:T("Wie viele?","How many?"), backHref:"../../index.html",
+  intro:T("Zähle die Früchte! Ich sage eine Frucht – zähle, wie viele es sind, und tippe auf die richtige Zahl.",
+          "Count the fruit! I'll name a fruit – count how many there are and tap the right number."),
+  introHtml:T("Wir <b>zählen</b>! Ich sage eine Frucht – zähle sie und tippe auf die passende Zahl. 🍎",
+              "Let's <b>count</b>! I'll name a fruit – count them and tap the matching number. 🍎"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

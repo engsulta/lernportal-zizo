@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Punkte-Muster 📐 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+<style>
+/* die Linien des Vorbild-Musters "zeichnen" sich ein */
+.bigshape svg g{ animation:drawin .9s ease both; }
+@keyframes drawin{ from{ opacity:0; transform:scale(.8); } to{ opacity:1; transform:scale(1); } }
+.bigshape svg{ transform-box:fill-box; transform-origin:center; }
+</style>
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">📐</span><span id="brandName">Punkte-Muster</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Punkte-Muster","Dot patterns");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* 3x3 Punktraster – wie das Geobrett im Arbeitsblatt */
+const PTS=[...Array(9)].map((_,i)=>[18+(i%3)*32, 18+Math.floor(i/3)*32]);
+/* Jedes Muster = Liste von Linien (Punkt a -> Punkt b). Alle klar verschieden. */
+const FIGS=[
+  [[0,2],[2,8]],              /* Ecke oben+rechts */
+  [[0,4],[4,6]],              /* "<" (Pfeil nach links) */
+  [[1,3],[3,7],[7,5],[5,1]],  /* Raute */
+  [[0,2],[2,8],[8,6],[6,0]],  /* Quadrat */
+  [[0,5],[5,6]],              /* "7"-Form */
+  [[2,4],[4,6]],              /* Knick */
+  [[0,8],[6,2]],              /* X */
+  [[3,5],[1,7]],              /* Plus + */
+  [[0,1],[1,5],[5,8]],        /* Zickzack */
+  [[6,0],[0,4],[4,8]]         /* Haken */
+];
+
+function figSvg(segs,big){
+  const dots=PTS.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4" fill="#b8c6d6"/>`).join("");
+  const lines=segs.map(([a,b])=>`<line x1="${PTS[a][0]}" y1="${PTS[a][1]}" x2="${PTS[b][0]}" y2="${PTS[b][1]}"/>`).join("");
+  return el("div",{class:big?"bigshape":"shape",
+    html:`<svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="#2a3d55" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">${dots}<g>${lines}</g></svg>`});
+}
+
+function buildRounds(){
+  return shuffle(FIGS).slice(0,8).map(target=>{
+    const others=shuffle(FIGS.filter(f=>f!==target)).slice(0,2);
+    const opts=shuffle([{ok:true,f:target},{ok:false,f:others[0]},{ok:false,f:others[1]}]);
+    return {
+      say:T("Welches Bild ist genau gleich? Tippe darauf!",
+            "Which picture is exactly the same? Tap it!"),
+      cols:3,
+      prompt:host=>host.append(figSvg(target,true)),
+      options:opts.map(o=>({ ok:o.ok, build:n=>n.append(figSvg(o.f)) }))
+    };
+  });
+}
+
+pickGame({
+  id:"punkte", face:"📐", title:T("Punkte-Muster","Dot patterns"), backHref:"../../index.html",
+  intro:T("Schau dir das Muster oben genau an! Welches Bild unten ist genau gleich? Tippe darauf.",
+          "Look closely at the pattern on top! Which picture below is exactly the same? Tap it."),
+  introHtml:T("Wir üben <b>Muster</b>! Oben siehst du ein Punkt-Muster – finde unten das <b>gleiche</b>. 📐",
+              "Let's practice <b>patterns</b>! A dot pattern is on top – find the <b>same one</b> below. 📐"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>

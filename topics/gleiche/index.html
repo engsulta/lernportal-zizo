@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Das Gleiche 🍩 – Zizo Lern-Spaß</title>
+<link rel="stylesheet" href="../../shared/styles.css">
+<link rel="manifest" href="../../manifest.webmanifest">
+<meta name="theme-color" content="#89d4ff">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zizo">
+</head>
+<body>
+<canvas id="confetti" style="display:none"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">🍩</span><span id="brandName">Das Gleiche</span></div>
+    <div class="score"><span class="star">★</span><span id="totalStars">0</span></div>
+    <button class="iconbtn" id="langBtn" title="Sprache / Language">🇩🇪</button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus">🔊</button>
+  </div>
+  <div id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/kid.js"></script>
+<script>
+"use strict";
+const { el, $, pick, shuffle, Store, pickGame, wireSoundButton, wireLangButton, clouds, T, Lang } = Kid;
+document.documentElement.lang = Lang.get();
+$("#totalStars").textContent = Store.total();
+$("#brandName").textContent = T("Das Gleiche","Find the match");
+wireLangButton($("#langBtn"));
+wireSoundButton($("#soundBtn"));
+clouds();
+
+/* Gruppen von drei ÄHNLICHEN Bildern. Genau eines ist gleich wie das Vorbild,
+   die zwei anderen sehen ähnlich aus (echtes Hinschauen nötig). */
+const GROUPS=[
+  ["🍩","🧁","🍪"],
+  ["🍎","🍏","🍅"],
+  ["🚗","🚙","🚕"],
+  ["🐶","🦊","🐺"],
+  ["⭐","🌟","✨"],
+  ["🌸","🌺","🌼"],
+  ["🐸","🐢","🦎"],
+  ["🦋","🐝","🐞"],
+  ["🔵","🟣","🟢"],
+  ["🌙","⛅","☁️"],
+  ["🍋","🍌","🌽"],
+  ["🎈","🎀","🎁"]
+];
+
+function buildRounds(){
+  return shuffle(GROUPS).slice(0,8).map(group=>{
+    const target=pick(group);
+    const options=shuffle(group).map(g=>({
+      ok:g===target,
+      build:node=>node.append(el("div",{class:"glyph"},g))
+    }));
+    return {
+      say:T("Welches Bild ist genau gleich? Finde es!",
+            "Which picture is exactly the same? Find it!"),
+      cols:3,
+      prompt:host=>host.append(el("div",{class:"bigglyph"},target)),
+      options
+    };
+  });
+}
+
+pickGame({
+  id:"gleiche", face:"🍩", title:T("Das Gleiche","Find the match"), backHref:"../../index.html",
+  intro:T("Oben siehst du ein Bild. Welches Bild unten ist genau gleich? Schau gut hin und tippe darauf!",
+          "You see a picture on top. Which picture below is exactly the same? Look closely and tap it!"),
+  introHtml:T("Wir finden das <b>Gleiche</b>! Oben ist ein Bild – tippe unten auf das <b>gleiche Bild</b>. 🍩",
+              "Let's find <b>the match</b>! A picture is on top – tap the <b>same picture</b> below. 🍩"),
+  rounds: buildRounds()
+});
+</script>
+</body>
+</html>
